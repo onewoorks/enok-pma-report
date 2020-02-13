@@ -1,5 +1,6 @@
 import React, { Component } from "react"
-import moment from 'moment'
+import moment from "moment"
+import axios from "axios"
 
 let group = [
     "JHA",
@@ -126,22 +127,30 @@ let finding = [
     }
 ]
 
-let today = moment(new Date()).format('DD MMMM YYYY')
+let today = moment(new Date()).format("DD MMMM YYYY")
+let today_db_format = moment(new Date()).format("YYYY-MM-DD")
 
 export default class FindingEntry extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            group: group[0],
-            cp: cp[0],
-            date: today,
-            site: "",
-            lift_id: "",
-            pma_number: "",
-            findings: "",
-            finding_zone: finding[0]["zone"],
-            finding_category: finding[0]["category"][0],
-            inpection_status: ""
+            form: {
+                group: group[0],
+                cp: cp[0],
+                date: today_db_format,
+                site: "A",
+                lift_id: "A",
+                pma_number: "A",
+                findings: "A",
+                finding_zone: finding[0]["zone"],
+                finding_category: finding[0]["category"][0],
+                inpection_status: "A"
+            },
+            button_submit: {
+                text: "Submit",
+                style_class: "primary"
+            },
+            form_mode: "new"
         }
 
         this.handleChange = this.handleChange.bind(this)
@@ -189,25 +198,72 @@ export default class FindingEntry extends Component {
 
     handleChange = event => {}
 
-    handle_change = event => {
-        console.log(this.state)
-    }
+    handle_change = event => {}
 
     handle_zone_change = event => {
         this.setState({
-            finding_zone: event.target.value
+            form: {
+                ...this.state.form,
+                finding_zone: event.target.value
+            }
+        })
+    }
+
+    handle_reset_form = () => {
+        this.setState({
+            form: {
+                group: group[0],
+                cp: cp[0],
+                date: today_db_format,
+                site: "A",
+                lift_id: "A",
+                pma_number: "A",
+                findings: "A",
+                finding_zone: finding[0]["zone"],
+                finding_category: finding[0]["category"][0],
+                inpection_status: "A"
+            },
+            button_submit: {
+                text: "Submit",
+                style_class: "primary"
+            },
+            form_mode: "new"
         })
     }
 
     handle_submit_form = event => {
         event.preventDefault()
-        console.log(this.state)
+        if (this.state.form_mode === "new") {
+            axios
+                .post(
+                    `${process.env.REACT_APP_API_URL}/pma-report/new-report`,
+                    this.state.form
+                )
+                .then(response => {
+                    console.log(this.state.form)
+                    console.log(response)
+                    this.setState({
+                        button_submit: {
+                            text: "Submitted",
+                            style_class: "success"
+                        },
+                        form_mode: "completed"
+                    })
+                    console.log(this.state)
+                })
+        } else {
+            this.handle_reset_form()
+        }
     }
 
     render() {
         return (
             <div>
-                <form action="" onSubmit={this.handle_submit_form} className="mb-3">
+                <form
+                    action=""
+                    onSubmit={this.handle_submit_form}
+                    className="mb-3"
+                >
                     <div className="row">
                         <div className="col-sm-12 col-md-6">
                             <div className="form-group">
@@ -217,9 +273,14 @@ export default class FindingEntry extends Component {
                                     id=""
                                     className="form-control"
                                     onChange={e =>
-                                        this.setState({ group: e.target.value })
+                                        this.setState({
+                                            form: {
+                                                ...this.state.form,
+                                                group: e.target.value
+                                            }
+                                        })
                                     }
-                                    value={this.state.group}
+                                    value={this.state.form.group}
                                 >
                                     {this.list_of_group(group)}
                                 </select>
@@ -233,7 +294,12 @@ export default class FindingEntry extends Component {
                                     id=""
                                     className="form-control"
                                     onChange={e =>
-                                        this.setState({ cp: e.target.value })
+                                        this.setState({
+                                            form: {
+                                                ...this.state.form,
+                                                cp: e.target.value
+                                            }
+                                        })
                                     }
                                 >
                                     {this.list_of_group(cp)}
@@ -246,7 +312,9 @@ export default class FindingEntry extends Component {
                         <div className="col-sm-12 col-md-6">
                             <div className="form-group">
                                 <label htmlFor="">Date</label>
-                                <input type="text" className="form-control-plaintext"
+                                <input
+                                    type="text"
+                                    className="form-control-plaintext"
                                     value={today}
                                     readOnly
                                 />
@@ -258,12 +326,15 @@ export default class FindingEntry extends Component {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    required
-                                    onKeyUp={text =>
+                                    onChange={text =>
                                         this.setState({
-                                            site: text.target.value
+                                            form: {
+                                                ...this.state.form,
+                                                site: text.target.value
+                                            }
                                         })
                                     }
+                                    value={this.state.form.site}
                                 />
                             </div>
                         </div>
@@ -276,12 +347,15 @@ export default class FindingEntry extends Component {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    required
-                                    onKeyUp={text =>
+                                    onChange={text =>
                                         this.setState({
-                                            lift_id: text.target.value
+                                            form: {
+                                                ...this.state.form,
+                                                lift_id: text.target.value
+                                            }
                                         })
                                     }
+                                    value={this.state.form.lift_id}
                                 />
                             </div>
                         </div>
@@ -291,11 +365,15 @@ export default class FindingEntry extends Component {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    onKeyUp={e =>
+                                    onChange={e =>
                                         this.setState({
-                                            pma_number: e.target.value
+                                            form: {
+                                                ...this.state.form,
+                                                pma_number: e.target.value
+                                            }
                                         })
                                     }
+                                    value={this.state.form.pma_number}
                                 />
                             </div>
                         </div>
@@ -324,12 +402,15 @@ export default class FindingEntry extends Component {
                                     className="form-control"
                                     onChange={e =>
                                         this.setState({
-                                            finding_category: e.target.value
+                                            form: {
+                                                ...this.state.form,
+                                                finding_category: e.target.value
+                                            }
                                         })
                                     }
                                 >
                                     {this.list_of_finding_category(
-                                        this.state.finding_zone
+                                        this.state.form.finding_zone
                                     )}
                                 </select>
                             </div>
@@ -344,9 +425,14 @@ export default class FindingEntry extends Component {
                             cols="30"
                             rows="10"
                             className="form-control"
-                        >
-                            {this.state.finding}
-                        </textarea>
+                            value={this.state.form.findings}
+                            onChange={ e => this.setState({
+                                form:{
+                                    ...this.state.form,
+                                    findings: e.target.value
+                                }
+                            })}
+                        ></textarea>
                     </div>
 
                     <div className="form-group">
@@ -354,16 +440,22 @@ export default class FindingEntry extends Component {
                         <input
                             type="text"
                             className="form-control"
-                            onKeyUp={e =>
+                            onChange={e =>
                                 this.setState({
-                                    inpection_status: e.target.value
+                                    form: {
+                                        ...this.state.form,
+                                        inpection_status: e.target.value
+                                    }
                                 })
                             }
+                            value={this.state.form.inspection_status}
                         />
                     </div>
 
-                    <button className="btn btn-primary btn-block">
-                        Submit
+                    <button
+                        className={`btn btn-${this.state.button_submit.style_class} btn-block text-uppercase`}
+                    >
+                        {this.state.button_submit.text}
                     </button>
                 </form>
             </div>
